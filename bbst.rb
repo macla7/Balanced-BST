@@ -189,12 +189,19 @@ class Tree
   def rebalance
     @root = build_tree(inorder, 0, inorder.length - 1)
   end
+
+  def pretty_print(node = @root, prefix = '', is_left = true)
+    pretty_print(node.right, "#{prefix}#{is_left ? '│   ' : '    '}", false) if node.right
+    puts "#{prefix}#{is_left ? '└── ' : '┌── '}#{node.value}"
+    pretty_print(node.left, "#{prefix}#{is_left ? '    ' : '│   '}", true) if node.left
+  end
 end
 
 input = Array.new(15) { rand(1..100) }
 new_tree = Tree.new(input)
 new_tree.build_tree
 puts "Balanced? #{new_tree.balanced?}"
+puts 'level order, preorder, postorder, inorder'
 p new_tree.level_order_rec
 p new_tree.preorder
 p new_tree.postorder
@@ -212,7 +219,9 @@ p new_tree.root
 puts "\nBalanced? #{new_tree.balanced?}"
 new_tree.rebalance
 p new_tree.balanced?
+puts 'level order, preorder, postorder, inorder'
 p new_tree.level_order_rec
 p new_tree.preorder
 p new_tree.postorder
 p new_tree.inorder
+new_tree.pretty_print
