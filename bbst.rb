@@ -132,12 +132,51 @@ class Tree
     @post_arr.push(node.value)
   end
 
-  def height(node = build_tree)
-    return -1 if node.nil?
+  def height(val)
+    node = find(val)
+    if node.left.nil? && node.right.nil?
+      -1
+    else
+      left_height = height(node.left.value) unless node.left.nil?
+      right_height = height(node.right.value) unless node.right.nil?
+    end
+    left_height = -1 if left_height.nil?
+    right_height = -1 if right_height.nil?
+    [left_height, right_height].max + 1
+  end
 
-    left_height = height(node.left)
-    right_height = height(node.right)
-    max(left_height, right_height) + 1
+  def depth(value, node = @root, depth = 0)
+    nil if node.nil?
+
+    if node.value < value
+      depth += 1
+      depth(value, node.right, depth)
+    elsif node.value > value
+      depth += 1
+      depth(value, node.left, depth)
+    else
+      depth
+    end
+  end
+
+  def balanced?(value = @root.value)
+    node = find(value)
+    nil if node.nil?
+
+    if node.right.nil? && node.left.nil?
+      true
+    elsif node.right.nil?
+      false if height(node.left.value)>0
+    elsif node.left.nil?
+      false if height(node.right.value)>0
+    elsif (height(node.left.value)-height(node.right.value)).abs >1
+      false
+    end
+    true
+  end
+
+  def rebalance
+    @root = build_tree(@in_arr, 0, @level_arr.length)
   end
 end
 
@@ -154,4 +193,7 @@ p ek.level_arr
 p ek.pre_arr
 p ek.in_arr
 p ek.post_arr
-puts ek.height
+puts ek.height(8)
+puts ek.depth(9)
+puts ek.balanced?(5)
+puts ek.rebalance.value
