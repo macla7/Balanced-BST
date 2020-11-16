@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class Node
   attr_accessor :value, :left, :right
   def initialize(value = nil, left = nil, right = nil)
@@ -12,11 +14,6 @@ class Tree
   def initialize(array)
     @arr = array.uniq.sort
     @root = nil
-    @queue = []
-    @pre_arr = []
-    @level_arr = []
-    @in_arr = []
-    @post_arr = []
   end
 
   def build_tree(arr = @arr, start = 0, last = (arr.length - 1))
@@ -31,21 +28,34 @@ class Tree
     root
   end
 
-  def insert(value, node = build_tree)
+  def root
+    @root.value
+  end
+
+  # Fix this insert function...
+  def insert(value, node = @root)
     if node.nil?
-      new_node = Node.new(value)
-      new_node.value
-    elsif value < node.value
-      insert(value, node.left)
+      puts 'hi'
+      node = Node.new(value)
+      puts node.value
     elsif value > node.value
-      insert(value, node.right)
+      if !node.right.nil?
+        node = insert(value, node.right)
+      else
+        node.right = Node.new(value)
+      end
+    elsif value < node.value
+      if !node.left.nil?
+        node = insert(value, node.left)
+      else
+        node.left = Node.new(value)
+      end
     end
+    node
   end
 
   def delete_node(value, node = build_tree)
-    if node.value.nil?
-      return node.value
-    end
+    return node.value if node.value.nil?
 
     if value < node.value
       delete_node(value, node.left)
@@ -73,27 +83,26 @@ class Tree
 
   def min_value_node(node)
     current = node
-    while current && current.left != nil
-      current = current.left
-    end
+    current = current.left while current && !current.left.nil?
     current
   end
 
-  def find(value, node = build_tree)
+  def find(value, node = @root)
     if node.nil? || node.value == value
       node
     elsif node.value < value
       find(value, node.right)
     else
-    find(value, node.left)
+      find(value, node.left)
     end
   end
 
-  def level_order_rec(node = build_tree)
-    @level_arr.push(node.value) unless node.value.nil?
-    @queue.push(node.left) unless node.left.nil?
-    @queue.push(node.right) unless node.right.nil?
-    level_order_rec(@queue.shift) unless @queue.empty?
+  def level_order_rec(node = @root, queue = [], level_arr = [])
+    level_arr.push(node.value) unless node.value.nil?
+    queue.push(node.left) unless node.left.nil?
+    queue.push(node.right) unless node.right.nil?
+    level_order_rec(queue.shift, queue, level_arr) unless queue.empty?
+    level_arr
   end
 
   def level_order_iter(node = build_tree)
@@ -104,32 +113,35 @@ class Tree
       node.value unless node.value.nil?
       queue.push(node.left) unless node.left.nil?
       queue.push(node.right) unless node.right.nil?
-      i+=1
+      i += 1
     end
   end
 
-  def preorder(node = @root)
+  def preorder(node = @root, pre_arr = [])
     return if node.nil?
 
-    @pre_arr.push(node.value)
-    preorder(node.left)
-    preorder(node.right)
+    pre_arr.push(node.value)
+    preorder(node.left, pre_arr)
+    preorder(node.right, pre_arr)
+    pre_arr
   end
 
-  def inorder(node = @root)
+  def inorder(node = @root, in_arr = [])
     return if node.nil?
 
-    inorder(node.left)
-    @in_arr.push(node.value)
-    inorder(node.right)
+    inorder(node.left, in_arr)
+    in_arr.push(node.value)
+    inorder(node.right, in_arr)
+    in_arr
   end
 
-  def postorder(node = @root)
+  def postorder(node = @root, post_arr = [])
     return if node.nil?
 
-    postorder(node.left)
-    postorder(node.right)
-    @post_arr.push(node.value)
+    postorder(node.left, post_arr)
+    postorder(node.right, post_arr)
+    post_arr.push(node.value)
+    post_arr
   end
 
   def height(val)
@@ -166,34 +178,41 @@ class Tree
     if node.right.nil? && node.left.nil?
       true
     elsif node.right.nil?
-      false if height(node.left.value)>0
+      false if height(node.left.value).positive?
     elsif node.left.nil?
-      false if height(node.right.value)>0
-    elsif (height(node.left.value)-height(node.right.value)).abs >1
-      false
+      false if height(node.right.value).positive?
+    else
+      (height(node.left.value) - height(node.right.value)).abs <= 1
     end
-    true
   end
 
   def rebalance
-    @root = build_tree(@in_arr, 0, @level_arr.length)
+    @root = build_tree(inorder, 0, inorder.length - 1)
   end
 end
 
-ek = Tree.new([1,2,3,4,5,6,7,8,9])
-ek.build_tree
-ek.delete_node(2)
-ek.find(6)
-ek.level_order_rec
-ek.level_order_iter
-ek.preorder
-ek.inorder
-ek.postorder
-p ek.level_arr
-p ek.pre_arr
-p ek.in_arr
-p ek.post_arr
-puts ek.height(8)
-puts ek.depth(9)
-puts ek.balanced?(5)
-puts ek.rebalance.value
+input = Array.new(15) { rand(1..100) }
+new_tree = Tree.new(input)
+new_tree.build_tree
+puts "Balanced? #{new_tree.balanced?}"
+p new_tree.level_order_rec
+p new_tree.preorder
+p new_tree.postorder
+p new_tree.inorder
+new_tree.insert(110)
+new_tree.insert(120)
+new_tree.insert(123)
+new_tree.insert(125)
+puts "\nBalanced? #{new_tree.balanced?}"
+puts 'The inorder array tree is:'
+p new_tree.inorder
+puts 'With a root of'
+p new_tree.root
+
+puts "\nBalanced? #{new_tree.balanced?}"
+new_tree.rebalance
+p new_tree.balanced?
+p new_tree.level_order_rec
+p new_tree.preorder
+p new_tree.postorder
+p new_tree.inorder
